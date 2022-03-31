@@ -6,9 +6,8 @@ use std::{
 };
 
 use log::{kv::Key, Log};
-// use serde::{Deserialize, Serialize};
-// use serde_json::Value;
 use tungstenite::{accept, Message as WsMessage, WebSocket};
+pub use web_logger_shared::components::core::TypedJson;
 use web_logger_shared::Message;
 
 #[derive(Default)]
@@ -46,7 +45,7 @@ impl WebLogger {
 #[macro_export]
 macro_rules! as_html {
   ($ex:expr) => {
-    web_logger_shared::components::TypedJson::new($ex)
+    $crate::TypedJson::new($ex)
   };
 }
 

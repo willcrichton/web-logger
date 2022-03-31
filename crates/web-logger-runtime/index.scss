@@ -1,0 +1,93 @@
+body {
+  font-size: 16px;
+  font-family: 'Inconsolata';
+  background: #222;
+  color: white;
+}
+
+.arrow {
+  font-size: 8px;
+  margin-left: 5px;
+  position: relative;
+  bottom: 2px;
+  color: #ccc;
+}
+
+.meta {
+  margin-right: 20px;
+}
+
+.obj-key {
+  margin: 0 3px;
+}
+
+.obj-key:not(:last-child)::after {
+  content: ',';
+}
+
+.nested {
+  margin-left: 1rem;
+}    
+
+td {
+  vertical-align: top;
+}
+
+td:first-child {
+  padding-right: 15px;
+}
+
+/* From yew-charts */
+.chart {
+  .axis.left {
+    .title {
+      transform: rotate(270deg);
+    }
+  }
+  .axis.right {
+    .title {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.chart {
+  width: 500px;
+
+  text {
+    fill: white;
+  }
+
+  .axis {
+    .line {
+      stroke: #ccc;
+    }
+    .tick {
+      stroke: #ccc;
+    }
+  }
+
+  .some-x-axis {
+    .text {
+        text-anchor: start;
+        transform: rotate(45deg);
+    }
+    .title {
+      transform: translatey(2em);
+    }
+  }
+    
+  .series.some-series {
+    stroke: green;
+    stroke-width: 2px;
+
+    text {
+      stroke: none;
+      stroke-width: 1px;
+    }
+  }
+
+  .series.bar-chart {
+    stroke-width: 30px;
+  }
+}

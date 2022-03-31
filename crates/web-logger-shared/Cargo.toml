@@ -11,3 +11,6 @@ serde_json = "1"
 log = {version = "0.4", features = ["std", "kv_unstable_serde"]}
 yew = "0.19"
 linkme = "0.2"
+maplit = "*"
+type-uuid = "0.1"
+yew-chart = {git = "https://github.com/titanclass/yew-chart"}

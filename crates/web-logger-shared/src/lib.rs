@@ -6,7 +6,7 @@
 use log::Level;
 use serde::{Deserialize, Serialize};
 
-// pub mod components;
+pub mod components;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Message {

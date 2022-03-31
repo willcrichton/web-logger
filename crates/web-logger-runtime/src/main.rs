@@ -4,10 +4,10 @@ use futures::StreamExt;
 use gloo_net::websocket::{futures::WebSocket, Message as WsMessage, WebSocketError};
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use web_logger_shared::{/* components::TypedJson, */ Message};
+use web_logger_shared::{components::core::TypedJson, Message};
 use yew::{
-  self, function_component, html, use_state, Callback, Component, Context, Html,
-  Properties, /* virtual_dom::VNode */
+  self, function_component, html, use_state, virtual_dom::VNode, Callback, Component,
+  Context, Html, Properties,
 };
 
 fn read_socket(ctx: &Context<Logger>) {
@@ -49,9 +49,9 @@ fn json_view(props: &JsonProps) -> Html {
     Value::Bool(b) => html! { { b } },
     Value::String(s) => html! { { s } },
     Value::Object(obj) => {
-      // if let Ok(typed) = serde_json::from_value::<TypedJson>(props.json.clone()) {
-      //   VNode::Comp(typed.to_vcomp())
-      // } else {
+      if let Ok(typed) = serde_json::from_value::<TypedJson>(props.json.clone()) {
+        VNode::VComp(typed.to_vcomp())
+      } else {
         let expanded = use_state(|| false);
         let on_click = {
           let expanded = expanded.clone();
@@ -98,7 +98,7 @@ fn json_view(props: &JsonProps) -> Html {
         let right = html! {<span onclick={on_click.clone()}>{"}"}</span> };
 
         [left, inner, right].into_iter().collect::<Html>()
-      // }
+      }
     }
     Value::Array(_) => todo!(),
   }
