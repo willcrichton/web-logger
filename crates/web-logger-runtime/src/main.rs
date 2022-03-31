@@ -4,10 +4,10 @@ use futures::StreamExt;
 use gloo_net::websocket::{futures::WebSocket, Message as WsMessage, WebSocketError};
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use web_logger_shared::Message;
+use web_logger_shared::{/* components::TypedJson, */ Message};
 use yew::{
   self, function_component, html, use_state, Callback, Component, Context, Html,
-  Properties,
+  Properties, /* virtual_dom::VNode */
 };
 
 fn read_socket(ctx: &Context<Logger>) {
@@ -23,7 +23,7 @@ fn read_socket(ctx: &Context<Logger>) {
             callback.emit(message);
           }
           Err(WebSocketError::ConnectionError) => {
-            gloo_timers::future::TimeoutFuture::new(1_000).await;
+            gloo_timers::future::TimeoutFuture::new(100).await;
             break;
           }
           _ => {}
@@ -49,52 +49,56 @@ fn json_view(props: &JsonProps) -> Html {
     Value::Bool(b) => html! { { b } },
     Value::String(s) => html! { { s } },
     Value::Object(obj) => {
-      let expanded = use_state(|| false);
-      let on_click = {
-        let expanded = expanded.clone();
-        Callback::from(move |_| expanded.set(!*expanded))
-      };
+      // if let Ok(typed) = serde_json::from_value::<TypedJson>(props.json.clone()) {
+      //   VNode::Comp(typed.to_vcomp())
+      // } else {
+        let expanded = use_state(|| false);
+        let on_click = {
+          let expanded = expanded.clone();
+          Callback::from(move |_| expanded.set(!*expanded))
+        };
 
-      let left = html! { { "{" } };
-      let inner = if !*expanded {
-        html! {
-          <span onclick={on_click}>{
-            obj.iter().map(|(k, _)| html! { <span class="obj-key">{k}</span> }).collect::<Html>()
-          }</span>
-        }
-      } else {
-        obj
-          .iter()
-          .map(|(k, v)| {
-            let expanded = use_state(|| false);
-            let on_click = {
-              let expanded = expanded.clone();
-              Callback::from(move |_| expanded.set(!*expanded))
-            };
+        let left = html! {<span onclick={on_click.clone()}>{"{"}</span> };
+        let inner = if !*expanded {
+          html! {
+            <span onclick={on_click.clone()}>{
+              obj.iter().map(|(k, _)| html! { <span class="obj-key">{k}</span> }).collect::<Html>()
+            }</span>
+          }
+        } else {
+          obj
+            .iter()
+            .map(|(k, v)| {
+              let expanded = use_state(|| false);
+              let on_click = {
+                let expanded = expanded.clone();
+                Callback::from(move |_| expanded.set(!*expanded))
+              };
 
-            html! {
-              <div>
-                { k }
-                <span class="arrow" onclick={on_click.clone()}>
+              html! {
+                <div class={"nested"}>
+                  <span onclick={on_click.clone()}>{ k }</span>
+                  <span class="arrow" onclick={on_click.clone()}>
+                    if *expanded {
+                      {"▼"}
+                    } else {
+                      {"▶"}
+                    }
+                  </span>
                   if *expanded {
-                    {"▼"}
-                  } else {
-                    {"▶"}
+                    <div class={"nested"}>
+                      <JsonView json={ v.clone() } />
+                    </div>
                   }
-                </span>
-                if *expanded {
-                  <div class={"nested"}>
-                    <JsonView json={ v.clone() } />
-                  </div>
-                }
-              </div>
-            }
-          })
-          .collect::<Html>()
-      };
-      let right = html! { { "}" } };
+                </div>
+              }
+            })
+            .collect::<Html>()
+        };
+        let right = html! {<span onclick={on_click.clone()}>{"}"}</span> };
 
-      [left, inner, right].into_iter().collect::<Html>()
+        [left, inner, right].into_iter().collect::<Html>()
+      // }
     }
     Value::Array(_) => todo!(),
   }
@@ -107,7 +111,36 @@ struct MessageProps {
 
 #[function_component(MessageView)]
 fn message_view(props: &MessageProps) -> Html {
-  html! { <JsonView json={props.message.value.as_ref().unwrap().clone()} /> }
+  let msg = &props.message;
+
+  html! {
+    <tr>
+      <td>
+        {"["}
+
+        if let Some(file) = msg.file.as_ref() {
+          { file }
+
+          if let Some(line) = msg.line {
+            {":"} { line }
+          }
+
+          { "  " }
+        }
+
+        { format!("{:?}", msg.level) }
+
+        {"]"}
+      </td>
+      <td>
+        if let Some(value) = msg.value.as_ref() {
+          <JsonView json={value.clone()} />
+        } else {
+          { &msg.message }
+        }
+      </td>
+    </tr>
+  }
 }
 
 pub struct Logger {
@@ -125,13 +158,13 @@ impl Component for Logger {
 
   fn view(&self, _ctx: &Context<Self>) -> Html {
     html! {
-      <div>
+      <table class="logger">
         { self.logs.iter().map(|log| {
           html! {
             <MessageView message={ log.clone() } />
           }
         }).collect::<Html>() }
-      </div>
+      </table>
     }
   }
 

@@ -1,13 +1,12 @@
-use std::any::Any;
+//! Types shared between runtime and main logger crate.
+//!
+//! Has to be in a separate crate so we don't compile logger crate dependencies
+//! in the WASM target.
 
 use log::Level;
 use serde::{Deserialize, Serialize};
-use yew::Component;
 
-// pub trait IntoComponent {
-//   type Output: Component<Message = (), Properties = ()>;
-//   fn into_component(self) -> Self::Output;
-// }
+// pub mod components;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Message {

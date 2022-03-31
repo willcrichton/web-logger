@@ -2,9 +2,12 @@ use std::{
   net::{TcpListener, TcpStream},
   sync::{Arc, Mutex},
   thread,
+  time::Duration,
 };
 
 use log::{kv::Key, Log};
+// use serde::{Deserialize, Serialize};
+// use serde_json::Value;
 use tungstenite::{accept, Message as WsMessage, WebSocket};
 use web_logger_shared::Message;
 
@@ -40,6 +43,13 @@ impl WebLogger {
   }
 }
 
+#[macro_export]
+macro_rules! as_html {
+  ($ex:expr) => {
+    web_logger_shared::components::TypedJson::new($ex)
+  };
+}
+
 impl Log for WebLogger {
   fn enabled(&self, _metadata: &log::Metadata) -> bool {
     true
@@ -47,11 +57,12 @@ impl Log for WebLogger {
 
   fn log(&self, record: &log::Record) {
     let kvs = record.key_values();
-    let v = kvs.get(Key::from_str("s")).unwrap();
-    let value = serde_json::value::to_value(&v).unwrap();
+    let value = kvs
+      .get(Key::from_str("s"))
+      .map(|v| serde_json::value::to_value(&v).unwrap());
     let message = Message {
-      value: Some(value),
-      message: "".into(),
+      value,
+      message: record.args().to_string(),
       level: record.level(),
       file: record.file().map(|s| s.to_owned()),
       module: record.module_path().map(|s| s.to_owned()),
@@ -71,11 +82,21 @@ impl Log for WebLogger {
   }
 
   fn flush(&self) {
-    // no-op
+    loop {
+      let inner = self.inner.lock().unwrap();
+      if inner.buffer.is_empty() {
+        break;
+      }
+      std::thread::sleep(Duration::from_millis(33));
+    }
   }
 }
 
 pub fn init() {
   log::set_boxed_logger(Box::new(WebLogger::new())).unwrap();
   log::set_max_level(log::LevelFilter::Info);
+}
+
+pub fn flush() {
+  log::logger().flush();
 }
