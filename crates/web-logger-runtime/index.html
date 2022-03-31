@@ -3,5 +3,33 @@
   <head>
     <meta charset="utf-8" />
     <title>Yew App</title>
+    <style>
+      body {
+        font-size: 16px;
+        font-family: 'Inconsolata';
+        background: #222;
+        color: white;
+      }
+
+      .arrow {
+        font-size: 8px;
+        margin-left: 5px;
+        position: relative;
+        bottom: 2px;
+        color: #ccc;
+      }
+
+      .obj-key {
+        margin: 0 3px;
+      }
+
+      .obj-key:not(:last-child)::after {
+        content: ',';
+      }
+
+      .nested {
+        margin-left: 1rem;
+      }
+    </style>
   </head>
 </html>

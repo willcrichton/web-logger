@@ -1,12 +1,10 @@
-use log::{kv::Key, Log};
-use serde::{Deserialize, Serialize};
-use std::net::TcpListener;
-use std::u64;
 use std::{
-  net::TcpStream,
+  net::{TcpListener, TcpStream},
   sync::{Arc, Mutex},
   thread,
 };
+
+use log::{kv::Key, Log};
 use tungstenite::{accept, Message as WsMessage, WebSocket};
 use web_logger_shared::Message;
 
@@ -50,13 +48,20 @@ impl Log for WebLogger {
   fn log(&self, record: &log::Record) {
     let kvs = record.key_values();
     let v = kvs.get(Key::from_str("s")).unwrap();
-    let value = serde_json::to_string(&v).unwrap();
-    let message = Message { value };
+    let value = serde_json::value::to_value(&v).unwrap();
+    let message = Message {
+      value: Some(value),
+      message: "".into(),
+      level: record.level(),
+      file: record.file().map(|s| s.to_owned()),
+      module: record.module_path().map(|s| s.to_owned()),
+      line: record.line(),
+    };
     let message_str = serde_json::to_string(&message).unwrap();
     let ws_message = WsMessage::Text(message_str);
 
     let mut inner = self.inner.lock().unwrap();
-    if inner.clients.len() == 0 {
+    if inner.clients.is_empty() {
       inner.buffer.push(ws_message);
     } else {
       for client in inner.clients.iter_mut() {
